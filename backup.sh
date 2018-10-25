@@ -114,7 +114,7 @@ helpMsg='usage: backup <command>
       extractPath 			Extract specific path from latest archive in repo
       extractAll 			Extract entire latest archive from repo
       exportKey				Export the repo key for backing it up
-      stop					Stop currently running borg operation
+      stop				Stop currently running borg operation
 
 backup is a wrapper for borg which is used for backups onto a remote server
 '

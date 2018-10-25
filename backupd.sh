@@ -87,6 +87,8 @@ do
 			#echo "Server found!"
 			backup backupAndPrune 1>>/dev/null 2>/usr/local/var/log/backup.latest    			#run backup
 
+			borg_PID=$(pgrep borg | sort -gr | head -n 1)	#get PID of latest backup process
+			renice -n 20 -p "$borg_PID"		#reduce CPU priority of backup to minimum
 		fi
 	fi
 
