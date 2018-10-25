@@ -8,6 +8,7 @@
 
 ##################-setup-################
 
+
 conf_file='/usr/local/etc/backup/backup.conf'
 omit_from_backup_file='/usr/local/etc/backup/excludeFromBackup'
 last_backup_time_file='/usr/local/etc/backup/lastBackupTime'
@@ -114,6 +115,8 @@ helpMsg='usage: backup <command>
       extractPath 			Extract specific path from latest archive in repo
       extractAll 			Extract entire latest archive from repo
       exportKey				Export the repo key for backing it up
+      pause 				Pause backup daemon and stop current borg operation
+      resume				Resume backup daemon
       stop				Stop currently running borg operation
 
 backup is a wrapper for borg which is used for backups onto a remote server
@@ -247,13 +250,56 @@ case $1 in      #go through supplied arguments
 		borg key export "$repo" "$host.repokey"
 		printCommandStatusAndExit $? "exportKey"
 		;;
+	pause)
+		msg="Pausing daemon and stopping current borg backup operation... \\n"
+		printf "$msg"
+		log "$msg"
+
+		#disable crontab keep alive
+		crontab -l | sed -E '/ *([^ ]+  *){5}[^ ]*\/usr\/local\/bin\/keep_alive/s/^/#/' | crontab -
+
+		#kill daemon
+		daemon_PID=$(ps -ax | grep /usr/local/bin/backupd | grep -v grep | awk '{ print $1 }')	#get PID of daemon process
+		if [[ "$daemon_PID" -ne "" ]]   #check that daemon was found
+		then
+			kill "$daemon_PID"		#kill daemon gently
+		fi
+
+		#kill borg
+		borg_PID=$(pgrep borg | sort -gr | head -n 1)	#get PID of latest borg process
+		if [[ "$borg_PID" -ne "" ]]   #check that borg process was found
+		then
+			kill "$borg_PID"		#kill borg process gently
+		fi
+		printCommandStatusAndExit 0 "pause"
+		;;
+	resume)
+		msg="Resuming backup daemon... \\n"
+		printf "$msg"
+		log "$msg"
+
+		#restart daemon if necessary
+		daemon_PID=$(ps -ax | grep /usr/local/bin/backupd | grep -v grep | awk '{ print $1 }')	#get PID of daemon process
+		if [[ "$daemon_PID" -eq "" ]]   #check that daemon is NOT running
+		then
+			backupd &  		#restart daemon in background
+		fi
+
+		#re-enable crontab for keep alive
+		crontab -l | sed -E '/# *([^ ]+  *){5}[^ ]*\/usr\/local\/bin\/keep_alive/s/^#*//' | crontab -
+
+		printCommandStatusAndExit 0 "resume"
+		;;
 	stop)
 		msg="Stopping current borg backup operation... \\n"
 		printf "$msg"
 		log "$msg"
 		borg_PID=$(pgrep borg | sort -gr | head -n 1)	#get PID of latest borg process
-		kill "$borg_PID"		#kill borg process gently
-		printCommandStatusAndExit $? "Stop"
+		if [[ "$borg_PID" -ne "" ]]   #check that borg process was found
+		then
+			kill "$borg_PID"		#kill borg process gently
+		fi
+		printCommandStatusAndExit 0 "Stop"
 		;;
 	*)
 		printf "%s" "$helpMsg"
