@@ -81,11 +81,16 @@ do
 
 	if [[ $time_diff_hour -ge $backup_timeout ]]       #check to see if last backup later than timeout
 	then
-		printf "Timeout reached! \\n"
+#		printf "Timeout reached! \\n"
 		if ping -c 5 -o "$server" 2>/dev/null 1>/dev/null ;    	#check to see if server is up and available using ping
 		then 
 			#echo "Server found!"
 			backup backupAndPrune 1>>/dev/null 2>/usr/local/var/log/backup.latest    			#run backup
+
+			borg_PID=$(pgrep borg | sort -gr | head -n 1)	#get PID of latest backup process
+			renice -n 20 -p "$borg_PID"		#reduce CPU priority of backup to minimum
+
+			backup verifyLatest 1>>/dev/null 2>/usr/local/var/log/backup-verify.latest
 
 			borg_PID=$(pgrep borg | sort -gr | head -n 1)	#get PID of latest backup process
 			renice -n 20 -p "$borg_PID"		#reduce CPU priority of backup to minimum

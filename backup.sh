@@ -106,18 +106,20 @@ logfile="/usr/local/var/log/backup.log"
 
 #help messages
 helpMsg='usage: backup <command>
-   <command>
-      initialize   			Initiate a repository
-      backup 				Create a backup archive only
-      backupAndPrune    		Create a backup archive and then prune repo
-      listArchives			List all the archives in repo
-      listLatestContents	  	List contents of latest archive in repo
-      extractPath 			Extract specific path from latest archive in repo
-      extractAll 			Extract entire latest archive from repo
-      exportKey				Export the repo key for backing it up
-      pause 				Pause backup daemon and stop current borg operation
-      resume				Resume backup daemon
-      stop				Stop currently running borg operation
+  <command>
+      initialize            Initiate a repository
+      backup                Create a backup archive only
+      backupAndPrune        Create a backup archive and then prune repo
+      verifyAll             Checks all archives in repo for errors
+      verifyLatest          Checks latest archive in repo for errors
+      listArchives          List all the archives in repo
+      listLatestContents    List contents of latest archive in repo
+      extractPath           Extract specific path from latest archive in repo
+      extractAll            Extract entire latest archive from repo
+      exportKey             Export the repo key for backing it up
+      pause                 Pause backup daemon and stop current borg operation
+      resume                Resume backup daemon
+      stop                  Stop currently running borg operation
 
 backup is a wrapper for borg which is used for backups onto a remote server
 '
@@ -206,6 +208,20 @@ case $1 in      #go through supplied arguments
 		prune_exit="$?"
 		general_exit=$(( create_exit > prune_exit ? create_exit : prune_exit ))
 		printCommandStatusAndExit "$general_exit" "backup and/or prune"
+		;;
+	verifyAll)
+		msg="Verifying remote repo... \\n"
+		printf "$msg"
+		log "$msg"
+		borg check --verbose
+		printCommandStatusAndExit $? "verify"
+		;;
+	verifyLatest)
+		msg="Verifying remote repo... \\n"
+		printf "$msg"
+		log "$msg"
+		borg check --verbose --last 1
+		printCommandStatusAndExit $? "verify"
 		;;
 	listArchives)
 		msg="Listing archives stored in remote repo... \\n"
