@@ -117,9 +117,9 @@ helpMsg='usage: backup <command>
       extractPath           Extract specific path from latest archive in repo
       extractAll            Extract entire latest archive from repo
       exportKey             Export the repo key for backing it up
-      pause                 Pause backup daemon and stop current borg operation
-      resume                Resume backup daemon
-      stop                  Stop currently running borg operation
+      stop                  Stop backup daemon and stop current borg operation
+      start                 Start backup daemon
+      pause                 Stop currently running borg operation only
 
 backup is a wrapper for borg which is used for backups onto a remote server
 '
@@ -266,8 +266,8 @@ case $1 in      #go through supplied arguments
 		borg key export "$repo" "$host.repokey"
 		printCommandStatusAndExit $? "exportKey"
 		;;
-	pause)
-		msg="Pausing daemon and stopping current borg backup operation... \\n"
+	stop)
+		msg="Stopping daemon and stopping current borg backup operation... \\n"
 		printf "$msg"
 		log "$msg"
 
@@ -287,10 +287,10 @@ case $1 in      #go through supplied arguments
 		then
 			kill "$borg_PID"		#kill borg process gently
 		fi
-		printCommandStatusAndExit 0 "pause"
+		printCommandStatusAndExit 0 "stop"
 		;;
-	resume)
-		msg="Resuming backup daemon... \\n"
+	start)
+		msg="Starting backup daemon... \\n"
 		printf "$msg"
 		log "$msg"
 
@@ -304,10 +304,10 @@ case $1 in      #go through supplied arguments
 		#re-enable crontab for keep alive
 		crontab -l | sed -E '/# *([^ ]+  *){5}[^ ]*\/usr\/local\/bin\/keep_alive/s/^#*//' | crontab -
 
-		printCommandStatusAndExit 0 "resume"
+		printCommandStatusAndExit 0 "start"
 		;;
-	stop)
-		msg="Stopping current borg backup operation... \\n"
+	pause)
+		msg="Stopping current borg backup operation but keeping daemon running... \\n"
 		printf "$msg"
 		log "$msg"
 		borg_PID=$(pgrep borg | sort -gr | head -n 1)	#get PID of latest borg process
@@ -315,7 +315,7 @@ case $1 in      #go through supplied arguments
 		then
 			kill "$borg_PID"		#kill borg process gently
 		fi
-		printCommandStatusAndExit 0 "Stop"
+		printCommandStatusAndExit 0 "pause"
 		;;
 	*)
 		printf "%s" "$helpMsg"
