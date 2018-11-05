@@ -83,17 +83,29 @@ do
 	then
 #		printf "Timeout reached! \\n"
 		if ping -c 5 -o "$server" 2>/dev/null 1>/dev/null ;    	#check to see if server is up and available using ping
-		then 
+		then 	#server is found so run backup operations
 			#echo "Server found!"
-			backup backupAndPrune 1>>/dev/null 2>/usr/local/var/log/backup.latest    			#run backup
 
-			borg_PID=$(pgrep borg | sort -gr | head -n 1)	#get PID of latest backup process
-			renice -n 20 -p "$borg_PID"		#reduce CPU priority of backup to minimum
+			#run backup
+			backup backupAndPrune 1>>/dev/null 2>/usr/local/var/log/backup.latest &   			#run backup
+			backup_PID="$!"
 
-			backup verifyLatest 1>>/dev/null 2>/usr/local/var/log/backup-verify.latest
+			sleep 5			#wait for borg to start to find its PID
+			borg_PID=$(pgrep borg | sort -gr | head -n 1)	#get PID of latest borg process
+			renice -n 20 -p "$borg_PID"		#reduce CPU priority of borg to minimum
 
-			borg_PID=$(pgrep borg | sort -gr | head -n 1)	#get PID of latest backup process
-			renice -n 20 -p "$borg_PID"		#reduce CPU priority of backup to minimum
+			wait "$backup_PID"			#wait for backup process to finish
+
+			#run verification
+			backup verifyLatest 1>>/dev/null 2>/usr/local/var/log/backup-verify.latest &   			#run backup verify
+			backup_PID="$!"
+
+			sleep 5			#wait for borg to start to find its PID
+			borg_PID=$(pgrep borg | sort -gr | head -n 1)	#get PID of latest borg process
+			renice -n 20 -p "$borg_PID"		#reduce CPU priority of borg to minimum
+
+			wait "$backup_PID"			#wait for backup verify process to finish
+
 		fi
 	fi
 
