@@ -220,7 +220,7 @@ case $1 in      #go through supplied arguments
 		msg="Verifying remote repo... \\n"
 		printf "$msg"
 		log "$msg"
-		borg check --verbose --last 1
+		borg check --verbose --archives-only --last 1
 		printCommandStatusAndExit $? "verify"
 		;;
 	listArchives)
