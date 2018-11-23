@@ -158,14 +158,14 @@ fi
 
 
 #check to see if server is up and available using ping
-if ! ping -c 5 -o "$server" 2>/dev/null 1>/dev/null ;
-then 
-     printf "Server not found! \\n"
-     log "Server not found!"
-     exit 2
-fi
-printf "Server found \\n"
-log "Server found"
+#if ! ping -c 5 -o "$server" 2>/dev/null 1>/dev/null ;
+#then 
+#     printf "Server not found! \\n"
+#     log "Server not found!"
+#     exit 2
+#fi
+#printf "Server found \\n"
+#log "Server found"
 
 
 case $1 in      #go through supplied arguments
@@ -268,7 +268,7 @@ case $1 in      #go through supplied arguments
 		printCommandStatusAndExit $? "exportKey"
 		;;
 	lastBackupTime)
-		msg="Printing time latest backup occured \\n"
+		msg="Printing time latest backup occured: \\n"
 		printf "$msg"
 		log "$msg"
 		date -r $(cat "$last_backup_time_file")
