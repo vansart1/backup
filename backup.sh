@@ -117,6 +117,7 @@ helpMsg='usage: backup <command>
       extractPath           Extract specific path from latest archive in repo
       extractAll            Extract entire latest archive from repo
       exportKey             Export the repo key for backing it up
+      lastBackupTime        Print time last backup occured
       stop                  Stop backup daemon and stop current borg operation
       start                 Start backup daemon
       pause                 Stop currently running borg operation only
@@ -265,6 +266,13 @@ case $1 in      #go through supplied arguments
 		log "$msg"
 		borg key export "$repo" "$host.repokey"
 		printCommandStatusAndExit $? "exportKey"
+		;;
+	lastBackupTime)
+		msg="Printing time latest backup occured \\n"
+		printf "$msg"
+		log "$msg"
+		date -r $(cat "$last_backup_time_file")
+		printCommandStatusAndExit $? "lastBackupTime"
 		;;
 	stop)
 		msg="Stopping daemon and stopping current borg backup operation... \\n"
